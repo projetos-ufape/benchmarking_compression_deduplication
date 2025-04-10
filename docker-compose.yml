@@ -1,0 +1,10 @@
+services:
+  ubuntu:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    mem_limit: 8g
+    cpus: 4
+
+volumes:
+  files:
