@@ -1,10 +1,12 @@
 services:
   ubuntu:
     build:
-      context: ./
+      context: ./ubuntu
       dockerfile: Dockerfile
+    volumes: 
+      - ./ubuntu:/usr/src/app
     mem_limit: 8g
     cpus: 4
 
 volumes:
-  files:
+  data:
