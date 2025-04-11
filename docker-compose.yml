@@ -11,6 +11,3 @@ services:
       - ROUND=${ROUND}
     mem_limit: 8g
     cpus: 4
-
-volumes:
-  data:
