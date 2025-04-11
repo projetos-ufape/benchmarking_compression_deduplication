@@ -7,11 +7,11 @@ RUN apt-get update && \
     dpkg -i sdfs_3.10.8_amd64.deb
 
 ARG TECH
-ARG EXTENSION
+ARG FILENAME
 ARG ROUND
 
 ENV TECH=${TECH}
-ENV EXTENSION=${EXTENSION}
+ENV FILENAME=${FILENAME}
 ENV ROUND=${ROUND}
     
 COPY monitoramento.sh /usr/src/app/monitoramento.sh

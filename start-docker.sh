@@ -2,7 +2,7 @@
 echo "Starting service..."
 
 export TECH=zip
-export EXTENSION=TESTE
+export FILENAME=GUIDE_Test.csv
 export ROUND=3
 
 make up
