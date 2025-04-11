@@ -1,13 +1,15 @@
 #!/bin/bash
 echo "Starting..."
 
-round=1
+tech=$1
+key=$2
+round=$3
 
-while [ $round -lt 3 ]
-do
+# while [ $round -lt 3 ]
+# do
     echo "round - $round"
-    tech=zip
-    key=guide_test-zip
+    # tech=zip
+    # key=guide_test-zip
     mkdir -p resultados-$tech
 
     /usr/src/app/monitoramento.sh $round $tech $key &
@@ -31,7 +33,7 @@ do
     echo "original reduzido taxa" >> resultados-$tech/resultado-$key-$round.txt
     echo "$tamanho_original $tamanho_comprimido $taxa_percentual" >> resultados-$tech/resultado-$key-$round.txt
 
-    rm arquivo_comprimido
-    round=`expr $round + 1`
-done
+    rm $arquivo_comprimido
+    # round=`expr $round + 1`
+# done
 

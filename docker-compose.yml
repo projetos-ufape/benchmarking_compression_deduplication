@@ -5,6 +5,10 @@ services:
       dockerfile: Dockerfile
     volumes: 
       - ./ubuntu:/usr/src/app
+    environment:
+      - TECH=${TECH}
+      - EXTENSION=${EXTENSION}
+      - ROUND=${ROUND}
     mem_limit: 8g
     cpus: 4
 

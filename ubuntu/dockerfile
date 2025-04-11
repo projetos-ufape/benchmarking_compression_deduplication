@@ -6,12 +6,21 @@ RUN apt-get update && \
     wget http://www.opendedup.org/downloads/sdfs_3.10.8_amd64.deb && \
     dpkg -i sdfs_3.10.8_amd64.deb
 
+ARG TECH
+ARG EXTENSION
+ARG ROUND
+
+ENV TECH=${TECH}
+ENV EXTENSION=${EXTENSION}
+ENV ROUND=${ROUND}
     
 COPY monitoramento.sh /usr/src/app/monitoramento.sh
 COPY start.sh /usr/src/app/start.sh
+COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /usr/src/app/start.sh
 RUN chmod +x /usr/src/app/monitoramento.sh
+RUN chmod +x /entrypoint.sh
 
 WORKDIR /usr/src/app
 
-CMD ["sh", "/usr/src/app/start.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
