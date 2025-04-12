@@ -5,4 +5,9 @@ export TECH=7z
 export FILENAME=GUIDE_Test.csv
 export ROUND=1
 
-make up
+
+while [ $ROUND -le 2 ]
+do
+    make up
+    ROUND=`expr $ROUND + 1`
+done
