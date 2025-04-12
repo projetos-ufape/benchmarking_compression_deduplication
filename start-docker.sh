@@ -17,7 +17,6 @@ techs=("zip" "7z" "gzip" "bzip2" "borg" "restic" "zbackup" \
 files=("GUIDE_Test.csv" "linux-master-clone")
 
 make down
-make up-build
 
 for tech in "${techs[@]}"; do
     export TECH="$tech"

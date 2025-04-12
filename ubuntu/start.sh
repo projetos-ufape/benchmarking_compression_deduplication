@@ -15,6 +15,8 @@ result_file=""
 
 IFS='_' read -r -a TECH_ARRAY <<< "$techs"
 
+declare -a temp_files_to_delete=()
+
 for tech in "${TECH_ARRAY[@]}"; do
     echo "rodando - $tech"
     suffix=""
@@ -41,51 +43,57 @@ for tech in "${TECH_ARRAY[@]}"; do
             suffix="gz"
             if $is_dir; then
                 tar_file="$base_name.tar"
-                tar -cf "/usr/src/app/data/$tar_file" -C "/usr/src/app/data" "$temp_file" 
+                tar -cf "/usr/src/app/data/$tar_file" -C "/usr/src/app/data" "$temp_file"
+                temp_files_to_delete+=("$tar_file")
                 temp_file="$tar_file"
             fi
             file_compressed="$base_name.$suffix"
+            temp_files_to_delete+=("$file_compressed")
             cmd="gzip -c /usr/src/app/data/$temp_file > /usr/src/app/data/$file_compressed"
             ;;
         bzip2)
             suffix="bz2"
             if $is_dir; then
                 tar_file="$base_name.tar"
+                temp_files_to_delete+=("$tar_file")
                 tar -cf "/usr/src/app/data/$tar_file" -C "/usr/src/app/data" "$temp_file" 
                 temp_file="$tar_file"
             fi
             file_compressed="$base_name.$suffix"
+            temp_files_to_delete+=("$file_compressed")
             cmd="bzip2 -c /usr/src/app/data/$temp_file > /usr/src/app/data/$file_compressed"
             ;;
         7z)
             suffix="7z"
             file_compressed="$base_name.$suffix"
+            temp_files_to_delete+=("$file_compressed")
             cmd="7z a /usr/src/app/data/$file_compressed /usr/src/app/data/$temp_file"
             ;;
         borg)
             suffix="borg"
             repo="tmp/${base_name}"
+            temp_files_to_delete+=("$repo")
             mkdir -p "/usr/src/app/data/$repo"
             export BORG_PASSPHRASE="test"
             borg init --encryption=none "/usr/src/app/data/$repo"
             cmd="borg create /usr/src/app/data/$repo::backup-round-$round /usr/src/app/data/$temp_file"
             file_compressed="$repo"
-            du -bcs "/usr/src/app/data/$repo" > "/usr/src/app/data/${repo}.size"
             ;;
         restic)
             suffix="restic"
             repo="tmp/${base_name}"
+            temp_files_to_delete+=("$repo")
             mkdir -p "/usr/src/app/data/$repo"
             export RESTIC_PASSWORD="test"
             export RESTIC_REPOSITORY="/usr/src/app/data/$repo"
             restic init
             cmd="restic backup /usr/src/app/data/$temp_file"
             file_compressed="$repo"
-            du -bcs "/usr/src/app/data/$repo" | grep total | awk '{print $1}' > "/usr/src/app/data/${repo}.size"
             ;;
         zbackup)
             suffix="zbackup"
             repo="tmp/${base_name}"
+            temp_files_to_delete+=("$repo")
             mkdir -p "/usr/src/app/data/$repo"
             zbackup init --non-encrypted "/usr/src/app/data/$repo"
             cmd="tar -cf - /usr/src/app/data/$temp_file 2>/dev/null | strace -c -e trace=read,write,open zbackup --non-encrypted backup /usr/src/app/data/$repo/backups/backup-$round 2> $result_path/$result_file"
@@ -106,7 +114,7 @@ for tech in "${TECH_ARRAY[@]}"; do
         strace -c -e trace=read,write,open $cmd > /dev/null 2> $result_path/$result_file
     elif [[ "$tech" == "gzip" || "$tech" == "bzip2" ]]; then
         eval "strace -c -e trace=read,write,open $cmd" 2> $result_path/$result_file
-    elif [[ "$tech" == "borg" || "$tech" == "restic" ]]; then  # Atualizado
+    elif [[ "$tech" == "borg" || "$tech" == "restic" ]]; then 
         strace -c -e trace=read,write,open $cmd > /dev/null 2> $result_path/$result_file
     elif [[ "$tech" == "zbackup" ]]; then
         eval "$cmd"
@@ -117,10 +125,6 @@ for tech in "${TECH_ARRAY[@]}"; do
     kill -TERM $monitor_pid
     echo "killed monitoramento.sh..."
 
-    if [[ "$tech" == "gzip" || "$tech" == "bzip2" ]] && [ "$temp_file" != "$origin_file" ]; then
-        rm -f "/usr/src/app/data/$temp_file"
-    fi
-
     temp_file=$file_compressed
 done
 
@@ -130,8 +134,8 @@ else
     origin_size=$(stat -c %s "/usr/src/app/data/$origin_file")
 fi
 
-if [[ -f "/usr/src/app/data/${temp_file}.size" ]]; then
-    compressed_size=$(cat "/usr/src/app/data/${temp_file}.size")
+if [ -d "/usr/src/app/data/$file_compressed" ]; then
+    compressed_size=$(du -bcs "/usr/src/app/data/$file_compressed" | awk '/total/ {print $1}')
 else
     compressed_size=$(stat -c %s "/usr/src/app/data/$file_compressed")
 fi
@@ -143,6 +147,16 @@ echo "" >> $result_path/$result_file
 echo "original reduzido taxa" >> $result_path/$result_file
 echo "$origin_size $compressed_size $rate_percent" >> $result_path/$result_file
 
-find "/usr/src/app/data/tmp/" -name "*${round}*" -exec rm -rf {} \; 2>/dev/null
+echo "Excluindo arquivos temporários..."
+for file in "${temp_files_to_delete[@]}"; do
+    if [ -e "/usr/src/app/data/$file" ]; then
+        if [ -d "/usr/src/app/data/$file" ]; then
+            rm -rf "/usr/src/app/data/$file"
+        else
+            rm -f "/usr/src/app/data/$file"
+        fi
+    fi
+done
+
 
 echo "finished job"
