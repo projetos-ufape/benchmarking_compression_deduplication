@@ -15,6 +15,8 @@ def read_file(pasta, nome_arq1, nome_arq2, num_interacoes, conteudo):
                 media_MemTotal = df1["MemTotal"].mean()
                 media_CPUPercent = df1["CPUPercent"].mean()
                 media_MemUsed = df1["MemUsed"].mean()
+                df1["datetime"] = pd.to_datetime(df1["datetime"])
+                time_diff = (df1["datetime"].max() - df1["datetime"].min()).total_seconds()
             except Exception as e:
                 print(f"Erro ao processar o arquivo {caminho1}: {e}")
                 continue
@@ -63,6 +65,7 @@ def read_file(pasta, nome_arq1, nome_arq2, num_interacoes, conteudo):
             "metric_read": metric_read,
             "metric_write": metric_write,
             "compression_rate": compression_rate,
+            "time_diff": time_diff,
             "conteudo": conteudo
         }
         
@@ -77,13 +80,14 @@ def extrair_insights(df, output_dir="insights"):
         return
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    selected_cols = ["media_CPUPercent", "media_MemUsed", "metric_read", "metric_write", "compression_rate"]
+    selected_cols = ["media_CPUPercent", "media_MemUsed", "metric_read", "metric_write", "compression_rate", "time_diff"]
     col_mapping = {
         "media_CPUPercent": "CPU Média",
         "media_MemUsed": "Uso de Memória",
         "metric_read": "Leitura",
         "metric_write": "Escrita",
-        "compression_rate": "Taxa de Compressão"
+        "compression_rate": "Taxa de Compressão",
+        "time_diff": "Tempo de execução"
     }
     group_means = df.groupby("conteudo")[selected_cols].mean().rename(columns=col_mapping)
     print("\nMédias Agrupadas por Conteúdo:")
