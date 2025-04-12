@@ -64,7 +64,7 @@ for tech in "${TECH_ARRAY[@]}"; do
             ;;
         borg)
             suffix="borg"
-            repo="tmp/${base_name}-${round}"
+            repo="tmp/${base_name}"
             mkdir -p "/usr/src/app/data/$repo"
             export BORG_PASSPHRASE="test"
             borg init --encryption=none "/usr/src/app/data/$repo"
@@ -74,7 +74,7 @@ for tech in "${TECH_ARRAY[@]}"; do
             ;;
         restic)
             suffix="restic"
-            repo="tmp/${base_name}-${round}"
+            repo="tmp/${base_name}"
             mkdir -p "/usr/src/app/data/$repo"
             export RESTIC_PASSWORD="test"
             export RESTIC_REPOSITORY="/usr/src/app/data/$repo"
@@ -85,7 +85,7 @@ for tech in "${TECH_ARRAY[@]}"; do
             ;;
         zbackup)
             suffix="zbackup"
-            repo="tmp/${base_name}-${round}"
+            repo="tmp/${base_name}"
             mkdir -p "/usr/src/app/data/$repo"
             zbackup init --non-encrypted "/usr/src/app/data/$repo"
             cmd="tar -cf - /usr/src/app/data/$temp_file 2>/dev/null | strace -c -e trace=read,write,open zbackup --non-encrypted backup /usr/src/app/data/$repo/backups/backup-$round 2> $result_path/$result_file"
