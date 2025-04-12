@@ -64,13 +64,13 @@ for tech in "${TECH_ARRAY[@]}"; do
             ;;
         restic)
             suffix="restic"
-            repo="/usr/src/app/tmp/resticrepo-$base_name-$round"
-            mkdir -p "$repo"
+            repo="tmp/resticrepo-$base_name-$round"
+            mkdir -p "/usr/src/app/data/$repo"
             export RESTIC_PASSWORD="test"
-            export RESTIC_REPOSITORY="$repo"
+            export RESTIC_REPOSITORY="/usr/src/app/data/$repo"
             restic init
             cmd="restic backup /usr/src/app/data/$temp_file"
-            file_compressed="$base_name.$suffix"
+            file_compressed="$repo"
             ;;
         opendedup)
             suffix="sdfs"
@@ -103,7 +103,7 @@ for tech in "${TECH_ARRAY[@]}"; do
         du -bcs "/usr/src/app/data/$repo" > "/usr/src/app/data/$file_compressed"
     elif [[ "$tech" == "restic" ]]; then
         strace -c -e trace=read,write,open $cmd > /dev/null 2> $result_path/$result_file
-        du -bcs "$repo" | grep total | awk '{print $1}' > "/usr/src/app/data/$file_compressed"
+        du -bcs "/usr/src/app/data/$repo" | grep total | awk '{print $1}' > "/usr/src/app/data/$file_compressed"
     elif [[ "$tech" == "opendedup" ]]; then
         strace -c -e trace=read,write,open $cmd > /dev/null 2> $result_path/$result_file
         cp "$sdfs_dir/$(basename $temp_file)" "/usr/src/app/data/$file_compressed"

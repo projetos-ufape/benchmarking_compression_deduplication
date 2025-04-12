@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "Starting service..."
 
-export TECH=borg
+export TECH=restic
 export FILENAME=GUIDE_Test.csv
 export ROUND=1
 
