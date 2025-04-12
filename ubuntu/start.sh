@@ -8,7 +8,7 @@ round=$3
 mkdir -p resultados/resultados-$techs
 
 origin_file=$filename
-temp_file=$origin_file
+temp_file=$filename
 base_name=""
 result_path="resultados/resultados-$techs"
 result_file=""
@@ -45,14 +45,6 @@ for tech in "${TECH_ARRAY[@]}"; do
             file_compressed="$base_name.$suffix"
             cmd="7z a /usr/src/app/data/$file_compressed /usr/src/app/data/$temp_file"
             ;;
-        duperemove)
-            suffix="dedup"
-            dedup_dir="/usr/src/app/tmp/duperemove/$base_name-$round"
-            mkdir -p "$dedup_dir"
-            cp "/usr/src/app/data/$temp_file" "$dedup_dir"
-            cmd="duperemove -dr --hashfile=$dedup_dir/hashfile $dedup_dir"
-            file_compressed="$base_name.$suffix"
-            ;;
         borg)
             suffix="borg"
             repo="tmp/borgrepo-$base_name-$round"
@@ -72,13 +64,15 @@ for tech in "${TECH_ARRAY[@]}"; do
             cmd="restic backup /usr/src/app/data/$temp_file"
             file_compressed="$repo"
             ;;
-        opendedup)
-            suffix="sdfs"
-            sdfs_dir="/usr/src/app/tmp/sdfs/$base_name-$round"
-            mkdir -p "$sdfs_dir"
-            cp "/usr/src/app/data/$temp_file" "$sdfs_dir"
-            cmd="ls $sdfs_dir"
-            file_compressed="$base_name.$suffix"
+        zbackup)
+            suffix="zbackup"
+            repo="tmp/zbackuprepo-$base_name-$round"
+            mkdir -p "/usr/src/app/data/$repo"
+            zbackup init --non-encrypted "/usr/src/app/data/$repo"
+
+            # Aplica o strace apenas no zbackup e redireciona a saída
+            cmd="tar -cf - /usr/src/app/data/$temp_file 2>/dev/null | strace -c -e trace=read,write,open zbackup --non-encrypted backup /usr/src/app/data/$repo/backups/backup-$round 2> $result_path/$result_file"
+            file_compressed="$repo"
             ;;
         *)
             echo "Tecnologia não suportada: $tech"
@@ -95,18 +89,14 @@ for tech in "${TECH_ARRAY[@]}"; do
         strace -c -e trace=read,write,open $cmd > /dev/null 2> $result_path/$result_file
     elif [[ "$tech" == "gzip" || "$tech" == "bzip2" ]]; then
         eval "strace -c -e trace=read,write,open $cmd" 2> $result_path/$result_file
-    # elif [[ "$tech" == "duperemove" ]]; then
-    #     strace -c -e trace=read,write,open $cmd > /dev/null 2> $result_path/$result_file
-    #     cp "$dedup_dir/$(basename $temp_file)" "/usr/src/app/data/$file_compressed"
     elif [[ "$tech" == "borg" ]]; then
         strace -c -e trace=read,write,open $cmd > /dev/null 2> $result_path/$result_file
         du -bcs "/usr/src/app/data/$repo" > "/usr/src/app/data/$file_compressed"
     elif [[ "$tech" == "restic" ]]; then
         strace -c -e trace=read,write,open $cmd > /dev/null 2> $result_path/$result_file
         du -bcs "/usr/src/app/data/$repo" | grep total | awk '{print $1}' > "/usr/src/app/data/$file_compressed"
-    elif [[ "$tech" == "opendedup" ]]; then
-        strace -c -e trace=read,write,open $cmd > /dev/null 2> $result_path/$result_file
-        cp "$sdfs_dir/$(basename $temp_file)" "/usr/src/app/data/$file_compressed"
+    elif [[ "$tech" == "zbackup" ]]; then
+        eval "$cmd" 
     fi
 
     echo "finding monitoramento.sh..."

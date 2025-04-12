@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "Starting service..."
 
-export TECH=restic
+export TECH=zbackup
 export FILENAME=GUIDE_Test.csv
 export ROUND=1
 
