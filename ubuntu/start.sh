@@ -28,7 +28,7 @@ for tech in "${TECH_ARRAY[@]}"; do
         zip)
             suffix="zip"
             file_compressed="$base_name.$suffix"
-            cmd="zip -v /usr/src/app/data/$file_compressed /usr/src/app/data/$temp_file"
+            cmd="zip -r /usr/src/app/data/$file_compressed /usr/src/app/data/$temp_file"
             ;;
         gzip)
             suffix="gz"
@@ -66,7 +66,7 @@ for tech in "${TECH_ARRAY[@]}"; do
             ;;
         zbackup)
             suffix="zbackup"
-            repo="tmp/zbackuprepo-$base_name-$round"
+            repo="tmp/$base_name"
             mkdir -p "/usr/src/app/data/$repo"
             zbackup init --non-encrypted "/usr/src/app/data/$repo"
 
@@ -103,6 +103,16 @@ for tech in "${TECH_ARRAY[@]}"; do
     monitor_pid=$(pgrep -f monitoramento.sh)
     kill -TERM $monitor_pid
     echo "killed monitoramento.sh..."
+
+    if [ "$temp_file" != "$origin_file" ]; then
+        if [ -e "/usr/src/app/data/$temp_file" ]; then
+            if [ -d "/usr/src/app/data/$temp_file" ]; then
+                rm -rf "/usr/src/app/data/$temp_file"
+            else
+                rm -f "/usr/src/app/data/$temp_file"
+            fi
+        fi
+    fi
 
     temp_file=$file_compressed
 done
