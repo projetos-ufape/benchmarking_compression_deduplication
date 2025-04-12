@@ -98,7 +98,7 @@ for tech in "${TECH_ARRAY[@]}"; do
     # elif [[ "$tech" == "duperemove" ]]; then
     #     strace -c -e trace=read,write,open $cmd > /dev/null 2> $result_path/$result_file
     #     cp "$dedup_dir/$(basename $temp_file)" "/usr/src/app/data/$file_compressed"
-    elif [[ "$tech" == "borg)" ]]; then
+    elif [[ "$tech" == "borg" ]]; then
         strace -c -e trace=read,write,open $cmd > /dev/null 2> $result_path/$result_file
         du -bcs "/usr/src/app/data/$repo" > "/usr/src/app/data/$file_compressed"
     elif [[ "$tech" == "restic" ]]; then

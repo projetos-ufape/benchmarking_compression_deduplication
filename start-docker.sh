@@ -2,7 +2,7 @@
 echo "Starting service..."
 
 export TECH=borg
-export FILENAME=linux-master-clone
+export FILENAME=GUIDE_Test.csv
 export ROUND=1
 
 make up
