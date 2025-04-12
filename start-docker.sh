@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "Starting service..."
 
-export TECH=zbackup_zip
+export TECH=borg_7z
 export FILENAME=GUIDE_Test.csv
 export ROUND=1
 

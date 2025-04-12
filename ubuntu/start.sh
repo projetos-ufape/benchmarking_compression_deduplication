@@ -47,7 +47,7 @@ for tech in "${TECH_ARRAY[@]}"; do
             ;;
         borg)
             suffix="borg"
-            repo="tmp/borgrepo-$base_name-$round"
+            repo="tmp/$base_name"
             mkdir -p "/usr/src/app/data/$repo"
             export BORG_PASSPHRASE="test"
             borg init --encryption=none "/usr/src/app/data/$repo"
@@ -56,7 +56,7 @@ for tech in "${TECH_ARRAY[@]}"; do
             ;;
         restic)
             suffix="restic"
-            repo="tmp/resticrepo-$base_name-$round"
+            repo="tmp/$base_name"
             mkdir -p "/usr/src/app/data/$repo"
             export RESTIC_PASSWORD="test"
             export RESTIC_REPOSITORY="/usr/src/app/data/$repo"
