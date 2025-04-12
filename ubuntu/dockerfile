@@ -2,9 +2,7 @@ FROM ubuntu:24.10
 
 
 RUN apt-get update && \
-    apt-get install -y sysstat procps strace bc fuse libfuse2 ssh openssh-server jsvc htop libxml2-utils wget zip gzip p7zip bzip2 duperemove borgbackup restic && \
-    wget http://www.opendedup.org/downloads/sdfs_3.10.8_amd64.deb && \
-    dpkg -i sdfs_3.10.8_amd64.deb
+    apt-get install -y sysstat procps strace bc fuse libfuse2 ssh openssh-server jsvc tar htop libxml2-utils zip gzip p7zip bzip2 borgbackup restic zbackup
 
 ARG TECH
 ARG FILENAME
