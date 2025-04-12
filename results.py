@@ -37,12 +37,12 @@ def read_file(pasta, nome_arq1, nome_arq2, num_interacoes, conteudo):
                     if len(partes) >= 2:
                         if partes[-1].lower() == "read":
                             try:
-                                metric_read = float(partes[1])
+                                metric_read = float(partes[3])
                             except:
                                 metric_read = None
                         elif partes[-1].lower() == "write":
                             try:
-                                metric_write = float(partes[1])
+                                metric_write = float(partes[3])
                             except:
                                 metric_write = None
                 filteredLines = [l.strip() for l in linhas if l.strip()]
@@ -123,12 +123,12 @@ def read_file_extended(pasta, nome_arq1, nome_arq2, nome_arq3, nome_arq4, num_in
                     if len(partes) >= 2:
                         if partes[-1].lower() == "read":
                             try:
-                                metric_read_2 = float(partes[1])
+                                metric_read_2 = float(partes[3])
                             except:
                                 metric_read_2 = None
                         elif partes[-1].lower() == "write":
                             try:
-                                metric_write_2 = float(partes[1])
+                                metric_write_2 = float(partes[3])
                             except:
                                 metric_write_2 = None
             except Exception as e:
@@ -147,12 +147,12 @@ def read_file_extended(pasta, nome_arq1, nome_arq2, nome_arq3, nome_arq4, num_in
                     if len(partes) >= 2:
                         if partes[-1].lower() == "read":
                             try:
-                                metric_read_4 = float(partes[1])
+                                metric_read_4 = float(partes[3])
                             except:
                                 metric_read_4 = None
                         elif partes[-1].lower() == "write":
                             try:
-                                metric_write_4 = float(partes[1])
+                                metric_write_4 = float(partes[3])
                             except:
                                 metric_write_4 = None
                 filteredLines = [l.strip() for l in linhas if l.strip()]
@@ -180,14 +180,14 @@ def read_file_extended(pasta, nome_arq1, nome_arq2, nome_arq3, nome_arq4, num_in
             continue
         
         if metric_read_2 is not None and metric_read_4 is not None:
-            metric_read = (metric_read_2 + metric_read_4) / 2
+            metric_read = metric_read_2 + metric_read_4
         elif metric_read_2 is not None:
             metric_read = metric_read_2
         else:
             metric_read = metric_read_4
         
         if metric_write_2 is not None and metric_write_4 is not None:
-            metric_write = (metric_write_2 + metric_write_4) / 2
+            metric_write = metric_write_2 + metric_write_4
         elif metric_write_2 is not None:
             metric_write = metric_write_2
         else:
@@ -236,17 +236,19 @@ def extrair_insights(df, output_dir="insights"):
         os.makedirs(output_dir)
     selected_cols = ["media_CPUPercent", "media_MemUsed", "metric_read", "metric_write", "compression_rate", "time_diff"]
     col_mapping = {
-        "media_CPUPercent": "CPU Média",
-        "media_MemUsed": "Uso de Memória",
-        "metric_read": "Leitura",
-        "metric_write": "Escrita",
-        "compression_rate": "Taxa de Compressão",
-        "time_diff": "Tempo de execução"
+        "media_CPUPercent": "CPU Média (%)",
+        "media_MemUsed": "Uso de Memória (GB)",
+        "metric_read": "Chamadas de leitura",
+        "metric_write": "Chamadas de escrita",
+        "compression_rate": "Taxa de Compressão (%)",
+        "time_diff": "Tempo de execução (seg)"
     }
     group_means = df.groupby("conteudo")[selected_cols].mean().rename(columns=col_mapping)
-    group_means["Menor arquivo gerado"] = df.groupby("conteudo")["compression_file"].min() / 100
-    group_means["Maior arquivo gerado"] = df.groupby("conteudo")["compression_file"].max() / 100
-    salvar_tabela_imagem(group_means)
+    group_means["Menor arquivo gerado"] = df.groupby("conteudo")["compression_file"].min() / 1024
+    group_means["Maior arquivo gerado"] = df.groupby("conteudo")["compression_file"].max() / 1024
+
+    tableName = output_dir + '/tabela_geral'
+    salvar_tabela_imagem(group_means, tableName)
     for col in group_means.columns:
         plt.figure()
         group_means[col].plot(kind='bar', color='skyblue', edgecolor='black')
@@ -265,6 +267,7 @@ def extrair_insights(df, output_dir="insights"):
         plt.suptitle("")
         plt.xlabel("Conteúdo")
         plt.ylabel(col_mapping[col])
+        plt.xticks(rotation=90)
         plt.tight_layout()
         filename = os.path.join(output_dir, f"boxplot_{col_mapping[col].replace(' ', '_')}.jpeg")
         plt.savefig(filename, format="jpeg", bbox_inches="tight")
@@ -275,7 +278,7 @@ def main():
 
     if len(sys.argv) > 1 and sys.argv[1].lower() == 'l':
         print("sys_argv = ", sys.argv[1])
-        dataBase = "linux-master"
+        dataBase = "linux-master-clone"
     else:
         dataBase = "GUIDE_Test"
 
@@ -319,7 +322,7 @@ def main():
         "./resultados-zbackup",
         f"log-{dataBase}-zbackup-",
         f"resultado-{dataBase}-zbackup-",
-        2,
+        numInteractions,
         "Zbackup"
     )
     df_borg = read_file(
@@ -331,8 +334,8 @@ def main():
     )
     df_restic = read_file(
         "./resultados-restic",
-        f"log-{dataBase}-restic",
-        f"resultado-{dataBase}",
+        f"log-{dataBase}-restic-",
+        f"resultado-{dataBase}-restic-",
         numInteractions,
         "Restic"
     )
@@ -450,8 +453,8 @@ def main():
         "./resultados-zbackup_gzip",
         f"log-{dataBase}-zbackup-",
         f"resultado-{dataBase}-zbackup-",
-        f"log-{dataBase}-gzip-",
-        f"resultado-{dataBase}-gzip-",
+        f"log-zbackuprepo-{dataBase}-gzip-",
+        f"resultado-zbackuprepo-{dataBase}-1-gzip-",
         numInteractions,
         "ZBackup-Gzip"
     )
@@ -459,8 +462,8 @@ def main():
         "./resultados-zbackup_zip",
         f"log-{dataBase}-zbackup-",
         f"resultado-{dataBase}-zbackup-",
-        f"log-{dataBase}-zip-",
-        f"resultado-{dataBase}-zip-",
+        f"log-zbackuprepo-{dataBase}-1-zip-",
+        f"resultado-zbackuprepo-{dataBase}-1-zip-",
         numInteractions,
         "ZBackup-Zip"
     )
@@ -468,8 +471,8 @@ def main():
         "./resultados-zbackup_7z",
         f"log-{dataBase}-zbackup-",
         f"resultado-{dataBase}-zbackup-",
-        f"log-{dataBase}-7z-",
-        f"resultado-{dataBase}-7z-",
+        f"log-zbackuprepo-{dataBase}-1-7z-",
+        f"resultado-zbackuprepo-{dataBase}-1-7z-",
         numInteractions,
         "ZBackup-7z"
     )
@@ -477,8 +480,8 @@ def main():
         "./resultados-zbackup_bzip2",
         f"log-{dataBase}-zbackup-",
         f"resultado-{dataBase}-zbackup-",
-        f"log-{dataBase}-bzip2-",
-        f"resultado-{dataBase}-bzip2-",
+        f"log-zbackuprepo-{dataBase}-1-bzip2-",
+        f"resultado-zbackuprepo-{dataBase}-1-bzip2-",
         numInteractions,
         "ZBackup-Bzip2"
     )
@@ -486,8 +489,8 @@ def main():
         "./resultados-borg_gzip",
         f"log-{dataBase}-borg-",
         f"resultado-{dataBase}-borg-",
-        f"log-{dataBase}-gzip-",
-        f"resultado-{dataBase}-gzip-",
+        f"log-borgrepo-{dataBase}-1-gzip-",
+        f"resultado-borgrepo-{dataBase}-1-gzip-",
         numInteractions,
         "Borg-Gzip"
     )
@@ -495,8 +498,8 @@ def main():
         "./resultados-borg_zip",
         f"log-{dataBase}-borg-",
         f"resultado-{dataBase}-borg-",
-        f"log-{dataBase}-zip-",
-        f"resultado-{dataBase}-zip-",
+        f"log-borgrepo-{dataBase}-1-zip-",
+        f"resultado-borgrepo-{dataBase}-1-zip-",
         numInteractions,
         "Borg-Zip"
     )
@@ -504,8 +507,8 @@ def main():
         "./resultados-borg_7z",
         f"log-{dataBase}-borg-",
         f"resultado-{dataBase}-borg-",
-        f"log-{dataBase}-7z-",
-        f"resultado-{dataBase}-7z-",
+        f"log-borgrepo-{dataBase}-1-7z-",
+        f"resultado-borgrepo-{dataBase}-1-7z-",
         numInteractions,
         "Borg-7z"
     )
@@ -513,8 +516,8 @@ def main():
         "./resultados-borg_bzip2",
         f"log-{dataBase}-borg-",
         f"resultado-{dataBase}-borg-",
-        f"log-{dataBase}-bzip2-",
-        f"resultado-{dataBase}-bzip2-",
+        f"log-borgrepo-{dataBase}-1-bzip2-",
+        f"resultado-borgrepo-{dataBase}-1-bzip2-",
         numInteractions,
         "Borg-Bzip2"
     )
@@ -522,8 +525,8 @@ def main():
         "./resultados-restic_gzip",
         f"log-{dataBase}-restic-",
         f"resultado-{dataBase}-restic-",
-        f"log-{dataBase}-gzip-",
-        f"resultado-{dataBase}-gzip-",
+        f"log-resticrepo-{dataBase}-1-gzip-",
+        f"resultado-resticrepo-{dataBase}-1-gzip-",
         numInteractions,
         "Restic-Gzip"
     )
@@ -531,8 +534,8 @@ def main():
         "./resultados-restic_zip",
         f"log-{dataBase}-restic-",
         f"resultado-{dataBase}-restic-",
-        f"log-{dataBase}-zip-",
-        f"resultado-{dataBase}-zip-",
+        f"log-resticrepo-{dataBase}-1-zip-",
+        f"resultado-resticrepo-{dataBase}-1-zip-",
         numInteractions,
         "Restic-Zip"
     )
@@ -540,8 +543,8 @@ def main():
         "./resultados-restic_7z",
         f"log-{dataBase}-restic-",
         f"resultado-{dataBase}-restic-",
-        f"log-{dataBase}-7z-",
-        f"resultado-{dataBase}-7z-",
+        f"log-resticrepo-{dataBase}-1-7z-",
+        f"resultado-resticrepo-{dataBase}-1-7z-",
         numInteractions,
         "Restic-7z"
     )
@@ -549,8 +552,8 @@ def main():
         "./resultados-restic_bzip2",
         f"log-{dataBase}-restic-",
         f"resultado-{dataBase}-restic-",
-        f"log-{dataBase}-bzip2-",
-        f"resultado-{dataBase}-bzip2-",
+        f"log-resticrepo-{dataBase}-1-bzip2-",
+        f"resultado-resticrepo-{dataBase}-1-bzip2-",
         numInteractions,
         "Restic-Bzip2"
     )
@@ -566,7 +569,9 @@ def main():
 
     # Concatena todos os DataFrames em um único DataFrame
     df_resultados = pd.concat(lista_dfs, ignore_index=True, axis=0)
-    extrair_insights(df_resultados)
+
+    insightDir = "insights/" + dataBase
+    extrair_insights(df_resultados, insightDir)
 
 if __name__ == "__main__":
     main()
