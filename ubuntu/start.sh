@@ -59,7 +59,7 @@ for tech in "${TECH_ARRAY[@]}"; do
             mkdir -p "/usr/src/app/data/$repo"
             export BORG_PASSPHRASE="test"
             borg init --encryption=none "/usr/src/app/data/$repo"
-            cmd="borg create --stats /usr/src/app/data/$repo::backup-round-$round /usr/src/app/data/$temp_file"
+            cmd="borg create /usr/src/app/data/$repo::backup-round-$round /usr/src/app/data/$temp_file"
             file_compressed=$repo
             ;;
         restic)
@@ -120,8 +120,20 @@ done
 echo "origin_file: /usr/src/app/data/$origin_file"
 echo "compressed_file: /usr/src/app/data/$file_compressed"
 
-origin_size=$(stat -c %s "/usr/src/app/data/$origin_file")
-compressed_size=$(stat -c %s "/usr/src/app/data/$file_compressed")
+# Detecta o tamanho do arquivo ou pasta de origem
+if [ -d "/usr/src/app/data/$origin_file" ]; then
+    origin_size=$(du -bcs "/usr/src/app/data/$origin_file" | awk '/total/ {print $1}')
+else
+    origin_size=$(stat -c %s "/usr/src/app/data/$origin_file")
+fi
+
+# Detecta o tamanho do arquivo ou pasta comprimido
+if [ -d "/usr/src/app/data/$file_compressed" ]; then
+    compressed_size=$(du -bcs "/usr/src/app/data/$file_compressed" | awk '/total/ {print $1}')
+else
+    compressed_size=$(stat -c %s "/usr/src/app/data/$file_compressed")
+fi
+
 
 rate=$(echo "scale=4; 1 - ($compressed_size / $origin_size)" | bc)
 rate_percent=$(echo "scale=2; $rate * 100" | bc)
