@@ -37,6 +37,7 @@ for tech in "${TECH_ARRAY[@]}"; do
         zip)
             suffix="zip"
             file_compressed="$base_name.$suffix"
+            temp_files_to_delete+=("$file_compressed")
             cmd="zip -r /usr/src/app/data/$file_compressed /usr/src/app/data/$temp_file"
             ;;
         gzip)
